@@ -69,6 +69,8 @@ export class MultiselectDropdown
   @Input() texts: IMultiSelectTexts;
   @Input() disabled: boolean = false;
   @Input() disabledSelection: boolean = false;
+  @Input() filter: string;
+
   @Output() selectionLimitReached = new EventEmitter();
   @Output() dropdownClosed = new EventEmitter();
   @Output() dropdownOpened = new EventEmitter();
@@ -262,6 +264,10 @@ export class MultiselectDropdown
     if (changes['texts']) {
       this.texts = { ...this.defaultTexts, ...this.texts };
       !changes['texts'].isFirstChange() && this.updateTitle();
+    }
+
+    if (changes['filter']) {
+      this.filterControl.setValue(this.filter);
     }
   }
 
