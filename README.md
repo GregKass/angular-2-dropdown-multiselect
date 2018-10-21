@@ -167,8 +167,6 @@ Although this dropdown is designed for multiple selections, a common request is 
 
 ### Lazy Loading
 
-This Plunker link demonstrates an implementation of lazy loading: [Lazy loading Plunker](https://plnkr.co/edit/fsZHbth4kzLI79hohcMG?p=preview)
-
 If using search during lazy load, the search term must be supplied to the back end to return the appropriate number of results. Standard inline search will not work, since the front end does not know how many items to load to retrieve the desired number of matches.
 
 If ```selectAddedValues``` is set to ```true``` for lazy loading, all values loaded to the checklist are checked when matching ```Select All``` criteria. If a search is used with ```Select All```, each search is added to a collection to be matched against when scrolling in. If ```selectAddedValues``` is false, only presently viewed matches will check on ```Select All```.
@@ -180,6 +178,8 @@ If the user then searches ```an``` and clicks ```Select All```, all matches to `
 Clicking ```Select All``` or ```Unselect All``` with no search criteria present will clear all previously stored searches. Any search match that is manually unchecked will remain unchecked unless matched by a new search ```Select All```.
 
 The implementor will be responsible for completing checks when the form is submitted. This could possibly either consist of completing the load of all lazy load checklists before submitting or sending checked items and search criteria to a back-end api to complete.
+
+<iframe src="https://stackblitz.com/edit/angular-oqhzcv?embed=1&file=src/app/app.component.ts"></iframe>
 
 ### Use model driven forms with ReactiveFormsModule:
 
