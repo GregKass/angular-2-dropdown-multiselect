@@ -179,7 +179,7 @@ Clicking ```Select All``` or ```Unselect All``` with no search criteria present 
 
 The implementor will be responsible for completing checks when the form is submitted. This could possibly either consist of completing the load of all lazy load checklists before submitting or sending checked items and search criteria to a back-end api to complete.
 
-<iframe src="https://stackblitz.com/edit/angular-oqhzcv?embed=1&file=src/app/app.component.ts"></iframe>
+<iframe width="560" height="315" src="https://stackblitz.com/edit/angular-oqhzcv?embed=1&file=src/app/app.component.ts" frameborder="0" seamless> </iframe>
 
 ### Use model driven forms with ReactiveFormsModule:
 
