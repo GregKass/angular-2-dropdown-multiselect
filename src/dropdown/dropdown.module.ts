@@ -3,19 +3,21 @@ import { NgModule } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 
 import { AutofocusDirective } from './autofocus.directive';
-import { MultiselectDropdown } from './dropdown.component';
+import { MultiselectDropdownComponent } from './dropdown.component';
 import { MultiSelectSearchFilter } from './search-filter.pipe';
+import { OffClickDirective } from './off-click.directive';
 
 @NgModule({
   imports: [CommonModule, ReactiveFormsModule],
   exports: [
-    MultiselectDropdown,
+    MultiselectDropdownComponent,
     MultiSelectSearchFilter,
   ],
   declarations: [
-    MultiselectDropdown,
+    MultiselectDropdownComponent,
     MultiSelectSearchFilter,
     AutofocusDirective,
+    OffClickDirective
   ],
 })
 export class MultiselectDropdownModule { }

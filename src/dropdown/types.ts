@@ -34,7 +34,7 @@ export interface IMultiSelectSettings {
    * Should be less than searchMaxLimit to take effect
    */
   searchMaxRenderedItems?: number;
-  checkedStyle?: 'checkboxes' | 'glyphicon' | 'fontawesome';
+  checkedStyle?: 'checkboxes' | 'glyphicon' | 'fontawesome' | 'visual';
   buttonClasses?: string;
   itemClasses?: string;
   containerClasses?: string;
@@ -62,6 +62,11 @@ export interface IMultiSelectSettings {
    * If activated, the title will show selections in the order they were selected.
    */
   maintainSelectionOrderInTitle?: boolean;
+  /**
+   * @default true
+   * Set the focus back to the input control when the dropdown closed
+   */
+  focusBack?: boolean;
 }
 
 export interface IMultiSelectTexts {

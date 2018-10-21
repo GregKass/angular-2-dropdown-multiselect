@@ -1,8 +1,7 @@
-import 'rxjs/add/operator/takeUntil';
 
 import {
-  ChangeDetectorRef,
   ChangeDetectionStrategy,
+  ChangeDetectorRef,
   Component,
   DoCheck,
   ElementRef,
@@ -25,15 +24,11 @@ import {
   NG_VALUE_ACCESSOR,
   Validator,
 } from '@angular/forms';
-import { Observable } from 'rxjs/Observable';
-import { Subject } from 'rxjs/Subject';
+import { Observable, Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 import { MultiSelectSearchFilter } from './search-filter.pipe';
-import {
-  IMultiSelectOption,
-  IMultiSelectSettings,
-  IMultiSelectTexts,
-} from './types';
+import { IMultiSelectOption, IMultiSelectSettings, IMultiSelectTexts, } from './types';
 
 /*
  * Angular 2 Dropdown Multiselect for Bootstrap
@@ -44,7 +39,7 @@ import {
 
 const MULTISELECT_VALUE_ACCESSOR: any = {
   provide: NG_VALUE_ACCESSOR,
-  useExisting: forwardRef(() => MultiselectDropdown),
+  useExisting: forwardRef(() => MultiselectDropdownComponent),
   multi: true,
 };
 
@@ -55,13 +50,13 @@ const MULTISELECT_VALUE_ACCESSOR: any = {
   providers: [MULTISELECT_VALUE_ACCESSOR, MultiSelectSearchFilter],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class MultiselectDropdown
+export class MultiselectDropdownComponent
   implements OnInit,
-    OnChanges,
-    DoCheck,
-    OnDestroy,
-    ControlValueAccessor,
-    Validator {
+  OnChanges,
+  DoCheck,
+  OnDestroy,
+  ControlValueAccessor,
+  Validator {
   filterControl: FormControl = this.fb.control('');
 
   @Input() options: Array<IMultiSelectOption>;
@@ -69,6 +64,7 @@ export class MultiselectDropdown
   @Input() texts: IMultiSelectTexts;
   @Input() disabled: boolean = false;
   @Input() disabledSelection: boolean = false;
+
   @Output() selectionLimitReached = new EventEmitter();
   @Output() dropdownClosed = new EventEmitter();
   @Output() dropdownOpened = new EventEmitter();
@@ -77,22 +73,16 @@ export class MultiselectDropdown
   @Output() onLazyLoad = new EventEmitter();
   @Output() onFilter: Observable<string> = this.filterControl.valueChanges;
 
-  @HostListener('document: click', ['$event.target'])
-  @HostListener('document: touchstart', ['$event.target'])
-  onClick(target: HTMLElement) {
-    if (!this.isVisible || !this.settings.closeOnClickOutside) return;
-    let parentFound = false;
-    while (target != null && !parentFound) {
-      if (target === this.element.nativeElement) {
-        parentFound = true;
-      }
-      target = target.parentElement;
-    }
-    if (!parentFound) {
-      this.isVisible = false;
-      this.focusBack = true;
-      this.dropdownClosed.emit();
-    }
+  get focusBack(): boolean {
+    return this.settings.focusBack && this._focusBack;
+  }
+
+  public clickedOutside(): void {
+    if (!this.isVisible || !this.settings.closeOnClickOutside) { return; }
+
+    this.isVisible = false;
+    this._focusBack = true;
+    this.dropdownClosed.emit();
   }
 
   destroyed$ = new Subject<any>();
@@ -117,7 +107,7 @@ export class MultiselectDropdown
   checkAllSearchRegister = new Set();
   checkAllStatus = false;
   loadedValueIds = [];
-  focusBack = false;
+  _focusBack = false;
   focusedItem: IMultiSelectOption | undefined;
 
   defaultSettings: IMultiSelectSettings = {
@@ -129,7 +119,7 @@ export class MultiselectDropdown
     searchMaxLimit: 0,
     searchMaxRenderedItems: 0,
     checkedStyle: 'checkboxes',
-    buttonClasses: 'btn btn-default btn-secondary',
+    buttonClasses: 'btn btn-primary dropdown-toggle',
     containerClasses: 'dropdown-inline',
     selectionLimit: 0,
     minSelectionLimit: 0,
@@ -146,6 +136,7 @@ export class MultiselectDropdown
     selectAddedValues: false,
     ignoreLabels: false,
     maintainSelectionOrderInTitle: false,
+    focusBack: true
   };
   defaultTexts: IMultiSelectTexts = {
     checkAll: 'Check all',
@@ -205,7 +196,7 @@ export class MultiselectDropdown
   ngOnInit() {
     this.title = this.texts.defaultTitle || '';
 
-    this.filterControl.valueChanges.takeUntil(this.destroyed$).subscribe(() => {
+    this.filterControl.valueChanges.pipe(takeUntil(this.destroyed$)).subscribe(() => {
       this.updateRenderItems();
       if (this.settings.isLazyLoad) {
         this.load();
@@ -235,7 +226,7 @@ export class MultiselectDropdown
         this.settings.selectAddedValues &&
         changes.options.previousValue
       ) {
-        let addedValues = changes.options.currentValue.filter(
+        const addedValues = changes.options.currentValue.filter(
           value => this.loadedValueIds.indexOf(value.id) === -1
         );
         this.loadedValueIds.concat(addedValues.map(value => value.id));
@@ -261,7 +252,7 @@ export class MultiselectDropdown
 
     if (changes['texts']) {
       this.texts = { ...this.defaultTexts, ...this.texts };
-      !changes['texts'].isFirstChange() && this.updateTitle();
+      if (!changes['texts'].isFirstChange()) { this.updateTitle(); }
     }
   }
 
@@ -295,11 +286,12 @@ export class MultiselectDropdown
       this.prevModel = this.model;
       this.onModelChange(this.model);
       this.onModelTouched();
+      this.cdRef.markForCheck();
     }
   }
 
-  onModelChange: Function = (_: any) => {};
-  onModelTouched: Function = () => {};
+  onModelChange: Function = (_: any) => { };
+  onModelTouched: Function = () => { };
 
   writeValue(value: any): void {
     if (value !== undefined && value !== null) {
@@ -331,20 +323,20 @@ export class MultiselectDropdown
   }
 
   validate(_c: AbstractControl): { [key: string]: any } {
-    if(this.model && this.model.length) {
+    if (this.model && this.model.length) {
       return {
-        required : {
+        required: {
           valid: false
         }
-      }
+      };
     }
 
-    if(this.options.filter(o => this.model.indexOf(o.id) && !o.disabled).length == 0) {
+    if (this.options.filter(o => this.model.indexOf(o.id) && !o.disabled).length === 0) {
       return {
-        selection : {
+        selection: {
           valid: false
         }
-      }
+      };
     }
 
     return null;
@@ -360,10 +352,8 @@ export class MultiselectDropdown
   }
 
   toggleDropdown(e?: Event) {
-    this.maybeStopPropagation(e);
-
     if (this.isVisible) {
-      this.focusBack = true;
+      this._focusBack = true;
     }
 
     this.isVisible = !this.isVisible;
@@ -389,7 +379,11 @@ export class MultiselectDropdown
       return;
     }
 
-    if (!this.disabledSelection) {
+    if (this.disabledSelection) {
+      return;
+    }
+
+    setTimeout(()=>{
       this.maybeStopPropagation(_event);
       this.maybePreventDefault(_event);
       const index = this.model.indexOf(option.id);
@@ -452,7 +446,7 @@ export class MultiselectDropdown
         addItem(option.id);
         if (!isAtSelectionLimit) {
           if (option.parentId && !this.settings.ignoreLabels) {
-            let children = this.options.filter(
+            const children = this.options.filter(
               child =>
                 child.id !== option.id && child.parentId === option.parentId
             );
@@ -460,7 +454,7 @@ export class MultiselectDropdown
               addItem(option.parentId);
             }
           } else if (this.parents.indexOf(option.id) > -1) {
-            let children = this.options.filter(
+            const children = this.options.filter(
               child =>
                 this.model.indexOf(child.id) < 0 && child.parentId === option.id
             );
@@ -475,7 +469,8 @@ export class MultiselectDropdown
       }
       this.model = this.model.slice();
       this.fireModelChange();
-    }
+
+    }, 0)
   }
 
   updateNumSelected() {
@@ -501,19 +496,19 @@ export class MultiselectDropdown
       this.settings.dynamicTitleMaxItems &&
       this.settings.dynamicTitleMaxItems >= this.numSelected
     ) {
-      let useOptions =
+      const useOptions =
         this.settings.isLazyLoad && this.lazyLoadOptions.length
-        ? this.lazyLoadOptions
-        : this.options;
+          ? this.lazyLoadOptions
+          : this.options;
 
       let titleSelections: Array<IMultiSelectOption>;
 
       if (this.settings.maintainSelectionOrderInTitle) {
-          const optionIds = useOptions.map((selectOption: IMultiSelectOption, idx: number) => selectOption.id);
-          titleSelections = this.model
-            .map((selectedId) => optionIds.indexOf(selectedId))
-            .filter((optionIndex) => optionIndex > -1)
-            .map((optionIndex) => useOptions[optionIndex]);
+        const optionIds = useOptions.map((selectOption: IMultiSelectOption, idx: number) => selectOption.id);
+        titleSelections = this.model
+          .map((selectedId) => optionIds.indexOf(selectedId))
+          .filter((optionIndex) => optionIndex > -1)
+          .map((optionIndex) => useOptions[optionIndex]);
       } else {
         titleSelections = useOptions.filter((option: IMultiSelectOption) => this.model.indexOf(option.id) > -1);
       }
@@ -539,21 +534,21 @@ export class MultiselectDropdown
   }
 
   addChecks(options) {
-    let checkedOptions = options
-    .filter(function(option: IMultiSelectOption) {
-      if (
-        !option.disabled ||
-        (
-          this.model.indexOf(option.id) === -1 &&
-          !(this.settings.ignoreLabels && option.isLabel)
-        )
-      ) {
-        this.onAdded.emit(option.id);
-        return true;
-      }
-      return false;
-    }.bind(this))
-    .map((option: IMultiSelectOption) => option.id);
+    const checkedOptions = options
+      .filter((option: IMultiSelectOption) => {
+        if (
+          !option.disabled &&
+          (
+            this.model.indexOf(option.id) === -1 &&
+            !(this.settings.ignoreLabels && option.isLabel)
+          )
+        ) {
+          this.onAdded.emit(option.id);
+          return true;
+        }
+        return false;
+      })
+      .map((option: IMultiSelectOption) => option.id);
 
     this.model = this.model.concat(checkedOptions);
   }
@@ -578,14 +573,12 @@ export class MultiselectDropdown
 
   uncheckAll() {
     if (!this.disabledSelection) {
-      let checkedOptions = this.model;
+      const checkedOptions = this.model;
       let unCheckedOptions = !this.searchFilterApplied()
         ? this.model
         : this.filteredOptions.map((option: IMultiSelectOption) => option.id);
       // set unchecked options only to the ones that were checked
-      unCheckedOptions = checkedOptions.filter(item =>
-        this.model.includes(item)
-      );
+      unCheckedOptions = checkedOptions.filter(item => unCheckedOptions.indexOf(item) > -1);
       this.model = this.model.filter((id: number) => {
         if (
           (unCheckedOptions.indexOf(id) < 0 &&
@@ -602,13 +595,8 @@ export class MultiselectDropdown
         if (this.searchFilterApplied()) {
           if (this.checkAllSearchRegister.has(this.filterControl.value)) {
             this.checkAllSearchRegister.delete(this.filterControl.value);
-            this.checkAllSearchRegister.forEach(searchTerm => {
-              let filterOptions = this.applyFilters(
-                this.options.filter(option =>
-                  unCheckedOptions.includes(option.id)
-                ),
-                searchTerm
-              );
+            this.checkAllSearchRegister.forEach(function (searchTerm) {
+              const filterOptions = this.applyFilters(this.options.filter(option => unCheckedOptions.indexOf(option.id) > -1), searchTerm);
               this.addChecks(filterOptions);
             });
           }
@@ -632,37 +620,37 @@ export class MultiselectDropdown
         this.model.indexOf(option.id) === -1 &&
         this.maybePreventDefault(event)
       )
-    ){
+    ) {
       this.maybePreventDefault(event);
     }
   }
 
-  isCheckboxDisabled(option: IMultiSelectOption): boolean {
-    return this.disabledSelection || option.disabled;
+  isCheckboxDisabled(option?: IMultiSelectOption): boolean {
+    return this.disabledSelection || option && option.disabled;
   }
 
   checkScrollPosition(ev) {
-    let scrollTop = ev.target.scrollTop;
-    let scrollHeight = ev.target.scrollHeight;
-    let scrollElementHeight = ev.target.clientHeight;
-    let roundingPixel = 1;
-    let gutterPixel = 1;
+    const scrollTop = ev.target.scrollTop;
+    const scrollHeight = ev.target.scrollHeight;
+    const scrollElementHeight = ev.target.clientHeight;
+    const roundingPixel = 1;
+    const gutterPixel = 1;
 
     if (
       scrollTop >=
       scrollHeight -
-        (1 + this.settings.loadViewDistance) * scrollElementHeight -
-        roundingPixel -
-        gutterPixel
+      (1 + this.settings.loadViewDistance) * scrollElementHeight -
+      roundingPixel -
+      gutterPixel
     ) {
       this.load();
     }
   }
 
   checkScrollPropagation(ev, element) {
-    let scrollTop = element.scrollTop;
-    let scrollHeight = element.scrollHeight;
-    let scrollElementHeight = element.clientHeight;
+    const scrollTop = element.scrollTop;
+    const scrollHeight = element.scrollHeight;
+    const scrollElementHeight = element.clientHeight;
 
     if (
       (ev.deltaY > 0 && scrollTop + scrollElementHeight >= scrollHeight) ||
@@ -672,6 +660,10 @@ export class MultiselectDropdown
       this.maybePreventDefault(ev);
       ev.returnValue = false;
     }
+  }
+
+  trackById(idx: number, selectOption: IMultiSelectOption) {
+    return selectOption.id;
   }
 
   load() {

@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 
-import { IMultiSelectSettings } from '../../../..';
+import { IMultiSelectSettings } from '../../../src';
 import { DataModel } from './data-model';
 
 @Component({
@@ -14,5 +14,7 @@ export class DummyComponent {
 
   settings: IMultiSelectSettings = {
     enableSearch: true,
+    showCheckAll: true,
+    showUncheckAll: true
   };
 }
