@@ -182,8 +182,6 @@ Clicking ```Select All``` or ```Unselect All``` with no search criteria present 
 
 The implementor will be responsible for completing checks when the form is submitted. This could possibly either consist of completing the load of all lazy load checklists before submitting or sending checked items and search criteria to a back-end api to complete.
 
-<iframe width="560" height="315" src="" frameborder="0" seamless> </iframe>
-
 ### Use model driven forms with ReactiveFormsModule:
 
 ```js
